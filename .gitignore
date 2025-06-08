@@ -33,3 +33,6 @@
 
 # Ignore TODOs.md file - Its my personal unorganized list of tasks and notes.
 /TODOS.md
+
+# Fly auto-generated files.
+/fly.toml

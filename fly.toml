@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for ssecret-server on 2025-06-08T15:47:31-03:00
+# fly.toml app configuration file generated for ssecret-server-polished-sound-9351 on 2025-06-08T18:56:44-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'ssecret-server'
-primary_region = 'gru'
+app = 'ssecret-server-polished-sound-9351'
+primary_region = 'gig'
 console_command = '/rails/bin/rails console'
 
 [build]
