@@ -14,15 +14,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_08_174203) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "encrypted_values", force: :cascade do |t|
-    t.integer "secret_set_id"
-    t.string "key"
-    t.text "enc_value"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["secret_set_id"], name: "index_encrypted_values_on_secret_set_id"
-  end
-
   create_table "secret_set_accesses", force: :cascade do |t|
     t.integer "user_id"
     t.integer "secret_set_id"
@@ -52,14 +43,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_08_174203) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "email"
+    t.string "username"
     t.string "password_digest"
     t.text "ssh_public_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "admin"
     t.index ["admin"], name: "index_users_on_admin"
-    t.index ["email"], name: "index_users_on_email"
+    t.index ["username"], name: "index_users_on_username"
   end
 
   add_foreign_key "secrets", "secret_sets"
