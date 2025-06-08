@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-RSpec.describe 'Api::Auth', type: :request do
-  describe 'POST /api/login' do
+RSpec.describe 'Api::V1::Auth', type: :request do
+  describe 'POST /api/v1/login' do
     let!(:user) { FactoryBot.create(:user, email: 'test@example.com', password: 'secure_password') }
     let(:login_params) do
       {
@@ -22,7 +22,7 @@ RSpec.describe 'Api::Auth', type: :request do
 
     context 'with valid credentials' do
       before do
-        post '/api/login', params: login_params
+        post '/api/v1/login', params: login_params
       end
 
       it 'returns http success' do
@@ -40,7 +40,7 @@ RSpec.describe 'Api::Auth', type: :request do
 
     context 'with invalid credentials' do
       before do
-        post '/api/login', params: invalid_login_params
+        post '/api/v1/login', params: invalid_login_params
       end
 
       it 'returns http unauthorized' do

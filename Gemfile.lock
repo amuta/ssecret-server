@@ -94,6 +94,8 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     diff-lcs (1.6.2)
+    dockerfile-rails (1.7.9)
+      rails (>= 3.0.0)
     dotenv (3.1.8)
     drb (2.2.3)
     ed25519 (1.4.0)
@@ -356,6 +358,7 @@ DEPENDENCIES
   bootsnap
   brakeman
   debug
+  dockerfile-rails (>= 1.7)
   factory_bot_rails
   jwt (~> 2.10)
   kamal

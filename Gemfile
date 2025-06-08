@@ -52,3 +52,5 @@ group :development, :test do
 end
 
 gem "jwt", "~> 2.10"
+
+gem "dockerfile-rails", ">= 1.7", :group => :development
