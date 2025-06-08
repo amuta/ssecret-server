@@ -1,9 +1,11 @@
 class User < ApplicationRecord
   include JwtAuthenticatable
 
-  has_secure_password
+  has_secure_password validations: false
 
   validates :username, presence: true, uniqueness: true, format: { with: /\A[a-zA-Z0-9_-]+\z/, message: "can only contain letters, numbers, underscore, and hyphen" }
+
+  validates :public_key, presence: true
 
   has_many :secret_sets, foreign_key: "created_by_user_id"
   has_many :secret_set_accesses
