@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_08_171707) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_08_174203) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_08_171707) do
     t.text "ssh_public_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "admin"
+    t.index ["admin"], name: "index_users_on_admin"
     t.index ["email"], name: "index_users_on_email"
   end
 
