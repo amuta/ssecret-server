@@ -31,8 +31,10 @@
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 
-# Ignore TODOs.md file - Its my personal unorganized list of tasks and notes.
+#  Those are my personal unorganized list of tasks and notes.
 /TODOS.md
+/BEHAVIORS.md
+/IDEAS.md
 
 # Fly auto-generated files.
 /fly.toml

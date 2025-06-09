@@ -1,13 +1,41 @@
 class ApplicationController < ActionController::API
-  before_action :authenticate_user!
+  before_action :authenticate_request!
 
-  def authenticate_user!
-    token = request.headers["Authorization"]&.split(" ")&.last
-    @current_user = User.from_jwt(token)
+  private
 
-    unless @current_user
-      render json: { error: "Unauthorized" }, status: :unauthorized
+  def authenticate_request!
+    result = authenticate_user
+    if result.success?
+      @current_user = result.user
+    else
+      render json: result, status: :unauthorized
     end
+  end
+
+  def authenticate_user
+    return jwt_authentication if jwt_auth_header?
+    return signature_authentication if signature_auth_headers?
+    Authentication::Result.new(error_code: :missing_params)
+  end
+
+  def jwt_auth_header?
+    request.headers["Authorization"]&.start_with?("Bearer ")
+  end
+
+  def signature_auth_headers?
+    request.headers["X-Signature"].present? && request.headers["X-Timestamp"].present?
+  end
+
+  def jwt_authentication
+    token = request.headers["Authorization"].split(" ").last
+    user = User.from_jwt(token)
+    Authentication::Result.new(user: user)
+  rescue
+    Authentication::Result.new(error_code: :invalid_auth)
+  end
+
+  def signature_authentication
+    SignatureAuthenticator.new(request).authenticate
   end
 
   def current_user

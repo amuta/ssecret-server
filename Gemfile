@@ -49,8 +49,9 @@ group :development, :test do
   gem "shoulda-matchers"
   gem "factory_bot_rails"
   gem "pry-rails"
+  gem "faker", "~> 3.5"
 end
 
 gem "jwt", "~> 2.10"
 
-gem "dockerfile-rails", ">= 1.7", :group => :development
+gem "dockerfile-rails", ">= 1.7", group: :development

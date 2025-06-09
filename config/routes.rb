@@ -11,7 +11,8 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
-      post "/login", to: "auth#login"
+      post "auth/login", to: "auth#login"
+      get "me", to: "me#show"
     end
   end
 end

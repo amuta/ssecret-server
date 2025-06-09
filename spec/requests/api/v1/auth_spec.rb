@@ -1,54 +1,91 @@
 require 'rails_helper'
 
-RSpec.describe 'Api::V1::Auth', type: :request do
-  describe 'POST /api/v1/login' do
-    let!(:user) { FactoryBot.create(:user, username: 'testuser', password: 'secure_password') }
-    let(:login_params) do
-      {
-        user: {
-          username: 'testuser',
-          password: 'secure_password'
-        }
-      }
-    end
-    let(:invalid_login_params) do
-      { user:
-        {
-          username: 'testuser',
-          password: 'wrong_password'
-        }
-      }
-    end
+RSpec.describe 'Auth API', type: :request do
+  describe 'POST /api/v1/auth/login' do
+    let(:user) { create(:user, password: 'password123') }
+    let(:endpoint) { '/api/v1/auth/login' }
 
     context 'with valid credentials' do
-      before do
-        post '/api/v1/login', params: login_params
-      end
+      it 'returns JWT token' do
+        post endpoint, params: {
+          user: {
+            username: user.username,
+            password: 'password123'
+          }
+        }
 
-      it 'returns http success' do
         expect(response).to have_http_status(:success)
-      end
-
-      it 'returns a token in the response body' do
         expect(response.parsed_body).to include('token')
-      end
-
-      it 'returns a non-empty token' do
-        expect(response.parsed_body['token']).not_to be_empty
       end
     end
 
     context 'with invalid credentials' do
-      before do
-        post '/api/v1/login', params: invalid_login_params
-      end
+      it 'returns unauthorized' do
+        post endpoint, params: {
+          user: {
+            username: user.username,
+            password: 'wrong_password'
+          }
+        }
 
-      it 'returns http unauthorized' do
         expect(response).to have_http_status(:unauthorized)
+        expect(response.parsed_body['error']).to eq('Invalid username or password')
+      end
+    end
+
+    context 'with user without password' do
+      let(:user_without_password) { create(:user, password: nil) }
+
+      it 'returns unauthorized when attempting login' do
+        post endpoint, params: {
+          user: {
+            username: user_without_password.username,
+            password: ''
+          }
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(response.parsed_body['error']).to eq('Invalid username or password')
+      end
+    end
+  end
+
+  describe 'authentication methods' do
+    let(:protected_endpoint) { '/api/v1/me' }
+    let(:user) { create(:user) }
+
+    context 'with JWT authentication' do
+      it 'authenticates successfully with valid token' do
+        token = user.generate_jwt
+        get protected_endpoint, headers: { 'Authorization': "Bearer #{token}" }
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['success']).to be true
       end
 
-      it 'returns an error message' do
-        expect(response.parsed_body).to include('error' => 'Invalid username or password')
+      it 'fails with invalid token' do
+        get protected_endpoint, headers: { 'Authorization': "Bearer invalid" }
+        expect(response).to have_http_status(:unauthorized)
+        expect(response.parsed_body['error']).to eq('Authentication failed')
+      end
+    end
+
+    context 'with signature authentication' do
+      it 'authenticates successfully with valid signature' do
+        timestamp = Time.now.to_i
+        headers = sign_request(user: user, endpoint: protected_endpoint, timestamp: timestamp)
+
+        get protected_endpoint, headers: headers
+        expect(response).to have_http_status(:success)
+        expect(response.parsed_body['success']).to be true
+      end
+
+      it 'fails with expired timestamp' do
+        timestamp = 6.minutes.ago.to_i
+        headers = sign_request(user: user, endpoint: protected_endpoint, timestamp: timestamp)
+
+        get protected_endpoint, headers: headers
+        expect(response).to have_http_status(:unauthorized)
+        expect(response.parsed_body['error']).to eq('Request has expired')
       end
     end
   end

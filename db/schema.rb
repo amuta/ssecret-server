@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_08_174203) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_09_185249) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,11 +45,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_08_174203) do
   create_table "users", force: :cascade do |t|
     t.string "username"
     t.string "password_digest"
-    t.text "ssh_public_key"
+    t.text "public_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "admin"
+    t.string "public_key_hash"
     t.index ["admin"], name: "index_users_on_admin"
+    t.index ["public_key_hash"], name: "index_users_on_public_key_hash", unique: true
     t.index ["username"], name: "index_users_on_username"
   end
 

@@ -1,7 +1,7 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user!, only: [ :login ]
+      skip_before_action :authenticate_request!, only: [ :login ]
       def login
         user = User.authenticate_by(login_params)
 
