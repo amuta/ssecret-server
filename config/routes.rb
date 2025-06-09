@@ -13,6 +13,10 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "auth/login", to: "auth#login"
       get "me", to: "me#show"
+      resource :me, only: [ :show ], controller: "me"
+      namespace :me do
+        resources :secret_sets, only: [ :index ]
+      end
     end
   end
 end

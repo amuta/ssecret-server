@@ -1,4 +1,12 @@
 module AuthHelper
+  def auth_headers(user)
+    token = user.generate_jwt
+    {
+      'Authorization' => "Bearer #{token}",
+      'Accept' => 'application/json'
+    }
+  end
+
   def sign_request(user:, endpoint:, method: "GET", body: "", timestamp: Time.now.to_i)
     # For tests, we generate an ephemeral key pair
     private_key = OpenSSL::PKey::RSA.new(2048)
