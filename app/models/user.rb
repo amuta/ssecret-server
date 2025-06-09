@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   validates :username, presence: true, uniqueness: true, format: { with: /\A[a-zA-Z0-9_-]+\z/, message: "can only contain letters, numbers, underscore, and hyphen" }
 
-  validates :ssh_public_key, presence: true
+  validates :ssh_public_key, presence: false
 
   has_many :secret_sets, foreign_key: "created_by_user_id"
   has_many :secret_set_accesses
