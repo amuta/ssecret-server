@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   include JwtAuthenticatable
   include PrivateKeyAuthenticable
+  include PublicKeyNormalizable
 
   has_secure_password validations: false
 

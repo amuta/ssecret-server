@@ -55,3 +55,5 @@ end
 gem "jwt", "~> 2.10"
 
 gem "dockerfile-rails", ">= 1.7", group: :development
+
+gem "net-ssh", "~> 7.3"

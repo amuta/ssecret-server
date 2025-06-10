@@ -369,6 +369,7 @@ DEPENDENCIES
   jbuilder
   jwt (~> 2.10)
   kamal
+  net-ssh (~> 7.3)
   pg (~> 1.1)
   pry-rails
   puma (>= 5.0)
