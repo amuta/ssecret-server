@@ -1,17 +1,17 @@
 module Api
   module V1
     module Me
-      class SecretSetsController < ApplicationController
+      class SecretsController < ApplicationController
         def index
-          @secret_sets = SecretSet.accessible_by(current_user)
+          @secrets = Secret.accessible_by(current_user)
         end
 
         def show
-          @secret_set = SecretSet
+          @secret = Secret
             .accessible_by(current_user)
             .find(params[:id])
 
-          @user_access = @secret_set
+          @user_access = @secret
             .secret_set_accesses
             .find_by!(user_id: current_user.id)
         rescue ActiveRecord::RecordNotFound

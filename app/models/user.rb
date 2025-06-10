@@ -8,12 +8,12 @@ class User < ApplicationRecord
 
   # Item Sets created by this user
   has_many :created_secret_sets,
-           class_name: "SecretSet",
+           class_name: "Secret",
            foreign_key: "created_by_user_id"
 
   # Item Sets shared with this user
   has_many :secret_set_accesses
-  has_many :secret_sets, through: :secret_set_accesses
+  has_many :secrets, through: :secret_set_accesses
 
   before_save :set_public_key_hash, if: :public_key_changed?
 

@@ -10,32 +10,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_10_162652) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_10_163336) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "items", force: :cascade do |t|
     t.string "key"
     t.text "content"
-    t.bigint "secret_set_id", null: false
+    t.bigint "secret_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.jsonb "metadata", default: {}
-    t.index ["secret_set_id"], name: "index_items_on_secret_set_id"
+    t.index ["secret_id"], name: "index_items_on_secret_id"
   end
 
   create_table "secret_set_accesses", force: :cascade do |t|
     t.integer "user_id"
-    t.integer "secret_set_id"
+    t.integer "secret_id"
     t.text "dek_encrypted"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "permissions", default: 0
-    t.index ["secret_set_id"], name: "index_secret_set_accesses_on_secret_set_id"
+    t.index ["secret_id"], name: "index_secret_set_accesses_on_secret_id"
     t.index ["user_id"], name: "index_secret_set_accesses_on_user_id"
   end
 
-  create_table "secret_sets", force: :cascade do |t|
+  create_table "secrets", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -54,5 +54,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_10_162652) do
     t.index ["username"], name: "index_users_on_username"
   end
 
-  add_foreign_key "items", "secret_sets"
+  add_foreign_key "items", "secrets"
 end

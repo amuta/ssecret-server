@@ -1,4 +1,4 @@
-class SecretSet < ApplicationRecord
+class Secret < ApplicationRecord
   has_many :secret_set_accesses, dependent: :destroy
   has_many :users, through: :secret_set_accesses
   has_many :items, dependent: :destroy
