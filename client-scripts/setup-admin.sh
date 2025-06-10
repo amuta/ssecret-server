@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script provides a guided setup for creating the first admin user
-# on a newly deployed ssecret-server instance on Fly.io via a secure SSH command.
+# on a newly deployed ssecret-server instance.
 set -e
 
 echo "--- Create Initial Admin User via SSH ---"
@@ -30,19 +30,21 @@ echo ""
 # --- Step 3: Get User's Public SSH Key ---
 DEFAULT_KEY_PATH="$HOME/.ssh/id_rsa_ssecret_$ADMIN_USERNAME"
 read -e -p "--> Enter path for your public SSH key [${DEFAULT_KEY_PATH}.pub]: " SSH_PUB_KEY_PATH
-# If input is empty, use the default path
+
 if [ -z "$SSH_PUB_KEY_PATH" ]; then
     SSH_PUB_KEY_PATH="${DEFAULT_KEY_PATH}.pub"
 fi
 echo "    Using SSH public key path: $SSH_PUB_KEY_PATH"
 
-# Check if the private key part exists to offer generation
 PRIVATE_KEY_PATH="${SSH_PUB_KEY_PATH%.pub}"
+
 if [ ! -f "$PRIVATE_KEY_PATH" ]; then
-    echo "    No corresponding private key found for '$SSH_PUB_KEY_PATH'."
-    read -p "    Generate a new SSH key pair named '${PRIVATE_KEY_PATH##*/}' now? (y/N) " -n 1 -r; echo
-    if [[ $REPLY =~ ^[Yy]$$ ]]; then
-        ssh-keygen -t ed25519 -f "$PRIVATE_KEY_PATH" -C "$ADMIN_USERNAME@ssecret-server"
+    echo "    No corresponding private key found at '$PRIVATE_KEY_PATH'."
+    read -p "    Generate a new RSA key pair named '${PRIVATE_KEY_PATH##*/}' now? (y/N) " REPLY
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "    Generating a 4096-bit RSA key in PEM format..."
+        ssh-keygen -t rsa -b 4096 -m PEM -f "$PRIVATE_KEY_PATH" -C "$ADMIN_USERNAME@ssecret-server"
         echo "    ✅ New key generated. You may add a passphrase for extra security."
     else
         echo "    ❌ Aborting. Please create a key pair and run again."; exit 1
@@ -57,12 +59,11 @@ fi
 PUB_KEY=$(cat "$SSH_PUB_KEY_PATH")
 echo ""
 echo "--> Running remote command to create user '$ADMIN_USERNAME'..."
+echo "    This will use the user:create Rake task on the server."
 
-# Note: This script assumes the `user:create` Rake task exists on the server.
-flyctl ssh console -a "$APP_NAME" -C "bin/rails \"user:create[$ADMIN_USERNAME,'$PUB_KEY']\""
-
-echo " Username: $ADMIN_USERNAME"
-echo " Pubkey: $PUB_KEY"
+flyctl ssh console -a "$APP_NAME" -C "bin/rails \"user:create[$ADMIN_USERNAME,'$PUB_KEY']\"" --pty
 
 echo ""
-echo "✅ Done. If no errors were reported above, your admin user has been created."
+echo "✅ Done. If no errors were reported by the server, your admin user should be created."
+echo "   You can now use the private key at '$PRIVATE_KEY_PATH' with the client."
+

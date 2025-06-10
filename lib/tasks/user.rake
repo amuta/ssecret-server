@@ -1,8 +1,9 @@
-# file: lib/tasks/user.rake
+require_relative "../../app/services/application_service.rb"
+require_relative "../../app/services/users/create_service"
 
 namespace :user do
   desc "Create a new user with a given username and public key"
-  task :create, [ :username, :public_key_string ] do |t, args|
+    task :create, [ :username, :public_key_string ] => :environment do |_task, args|
     username = args[:username]
     key_string = args[:public_key_string]
 
