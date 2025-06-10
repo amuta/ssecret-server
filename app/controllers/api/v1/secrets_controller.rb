@@ -61,10 +61,14 @@ module Api
       end
 
       def secret_params
-        params.require(:secret).permit(:name, :dek_encrypted).tap do |p|
+        params.require(:secret).permit(
+          :name,
+          :dek_encrypted,
+          items_attributes: [ :key, :content, :metadata ]
+        ).tap do |p|
           p[:creator_user] = current_user
           p[:creator_dek] = params[:dek_encrypted]
-        end.slice(:name, :creator_user, :creator_dek)
+        end.slice(:name, :creator_user, :creator_dek, :items_attributes)
       end
     end
   end
