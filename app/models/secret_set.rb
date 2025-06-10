@@ -10,5 +10,4 @@ class SecretSet < ApplicationRecord
   # Validations
   validates :name, presence: true
   validates :created_by, presence: true
-  validates :dek_encrypted, presence: true
 end

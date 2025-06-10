@@ -20,8 +20,7 @@ RSpec.describe 'Me::SecretSets API', type: :request do
       expect(response).to have_http_status(:success)
       body = response.parsed_body
       expect(body['success']).to be true
-      expect(body['data']['shared_sets'].length).to eq(1)
-      expect(body['data']['created_sets'].length).to eq(1)
+      expect(body['data']['secret_sets'].length).to eq(1)
     end
   end
 end
