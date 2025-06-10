@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe 'Auth API', type: :request do
-  describe 'POST /api/v1/auth/login' do
+  describe 'POST /api/v1/sessions' do
     let(:user) { create(:user, password: 'password123') }
-    let(:endpoint) { '/api/v1/auth/login' }
+    let(:endpoint) { '/api/v1/sessions' }
 
     context 'with valid credentials' do
       it 'returns JWT token' do

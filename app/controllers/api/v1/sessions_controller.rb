@@ -1,8 +1,9 @@
 module Api
   module V1
-    class AuthController < ApplicationController
-      skip_before_action :authenticate_request!, only: [ :login ]
-      def login
+    class SessionsController < ApplicationController
+      skip_before_action :authenticate_request!, only: [ :create ]
+
+      def create
         user = User.authenticate_by(login_params)
 
         if user
