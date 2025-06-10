@@ -6,8 +6,8 @@ json.data do
     json.dek_encrypted @user_access.dek_encrypted
 
 
-    json.secrets do
-      json.array! @secret_set.secrets do |secret|
+    json.items do
+      json.array! @secret_set.items do |secret|
         json.id       secret.id
         json.key      secret.key
         json.content  secret.content

@@ -1,7 +1,7 @@
 class SecretSet < ApplicationRecord
   has_many :secret_set_accesses, dependent: :destroy
   has_many :users, through: :secret_set_accesses
-  has_many :secrets, dependent: :destroy
+  has_many :items, dependent: :destroy
 
   has_one :owner_access,
           -> { where(permissions: :admin) },

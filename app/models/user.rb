@@ -6,12 +6,12 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: true, format: { with: /\A[a-zA-Z0-9_-]+\z/, message: "can only contain letters, numbers, underscore, and hyphen" }
   validates :public_key, presence: false
 
-  # Secret Sets created by this user
+  # Item Sets created by this user
   has_many :created_secret_sets,
            class_name: "SecretSet",
            foreign_key: "created_by_user_id"
 
-  # Secret Sets shared with this user
+  # Item Sets shared with this user
   has_many :secret_set_accesses
   has_many :secret_sets, through: :secret_set_accesses
 

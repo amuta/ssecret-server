@@ -9,8 +9,8 @@ RSpec.describe 'Me::SecretSets API', type: :request do
 
   before do
     create(:secret_set_access, user: user, secret_set: secret_set)
-    create(:secret, secret_set: secret_set, key: 'TEST_KEY', content: 'test content')
-    create(:secret, secret_set: own_secret_set, key: 'MY_KEY', content: 'my content')
+    create(:item, secret_set: secret_set, key: 'TEST_KEY', content: 'test content')
+    create(:item, secret_set: own_secret_set, key: 'MY_KEY', content: 'my content')
   end
 
   describe 'GET /api/v1/me/secret_sets' do
@@ -32,9 +32,9 @@ RSpec.describe 'Me::SecretSets API', type: :request do
       body = response.parsed_body
       expect(body['success']).to be true
       expect(body['data']['secret_set']['id']).to eq(secret_set.id)
-      expect(body['data']['secret_set']['secrets'].length).to eq(1)
-      expect(body['data']['secret_set']['secrets'].first['key']).to eq('TEST_KEY')
-      expect(body['data']['secret_set']['secrets'].first['content']).to eq('test content')
+      expect(body['data']['secret_set']['items'].length).to eq(1)
+      expect(body['data']['secret_set']['items'].first['key']).to eq('TEST_KEY')
+      expect(body['data']['secret_set']['items'].first['content']).to eq('test content')
     end
 
     it 'returns 404 if the user does not have access to the secret set' do
