@@ -2,10 +2,8 @@ class SecretSetAccess < ApplicationRecord
   belongs_to :user
   belongs_to :secret_set
 
-  validates :user_id, presence: true
-  validates :secret_set_id, presence: true
-  validates :dek_encrypted, presence: true
+  enum :permissions, { read: 0, write: 1, admin: 2 }
 
-  # Ensures a user can't be granted access to the same secret set multiple times
+  validates :dek_encrypted, presence: true
   validates :user_id, uniqueness: { scope: :secret_set_id }
 end

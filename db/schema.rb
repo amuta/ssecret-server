@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_09_221800) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_10_032941) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,10 +27,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_09_221800) do
 
   create_table "secret_sets", force: :cascade do |t|
     t.string "name"
-    t.integer "created_by_user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["created_by_user_id"], name: "index_secret_sets_on_created_by_user_id"
   end
 
   create_table "secrets", force: :cascade do |t|

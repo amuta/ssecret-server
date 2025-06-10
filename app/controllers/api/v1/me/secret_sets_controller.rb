@@ -3,16 +3,17 @@ module Api
     module Me
       class SecretSetsController < ApplicationController
         def index
-          @secret_sets  = current_user.secret_sets
+          @secret_sets = SecretSet.accessible_by(current_user)
         end
 
         def show
           @secret_set = SecretSet
-            .left_outer_joins(:secret_set_accesses)
-            .where("secret_sets.created_by_user_id = :uid OR secret_set_accesses.user_id = :uid",
-                   uid: current_user.id)
-            .distinct
+            .accessible_by(current_user)
             .find(params[:id])
+
+          @user_access = @secret_set
+            .secret_set_accesses
+            .find_by!(user_id: current_user.id)
         rescue ActiveRecord::RecordNotFound
           render json: { success: false, error: "Not found" }, status: :not_found
         end

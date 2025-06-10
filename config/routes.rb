@@ -15,7 +15,7 @@ Rails.application.routes.draw do
       get "me", to: "me#show"
       resource :me, only: [ :show ], controller: "me"
       namespace :me do
-        resources :secret_sets, only: [ :index ]
+        resources :secret_sets, only: [ :index, :show ]
       end
     end
   end
