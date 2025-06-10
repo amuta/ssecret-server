@@ -3,6 +3,22 @@ class ApplicationController < ActionController::API
 
   private
 
+  def render_not_found(message = nil)
+    message ||= "Resource"
+    message += " "
+    render json: { success: false, error: "#{message}Not Found" }, status: :not_found
+  end
+
+  def render_unprocessable_entity(message)
+    render json: { success: false, error: message },
+                 status: :unprocessable_entity
+  end
+
+  def render_unauthorized(message)
+    render json: { success: false, error: message || "Unauthorized" },
+                 status: :unauthorized
+  end
+
   def authenticate_request!
     result = authenticate_user
     if result.success?

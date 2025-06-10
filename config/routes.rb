@@ -7,8 +7,9 @@ Rails.application.routes.draw do
 
       resource :me, only: :show, controller: "me"
 
-      namespace :me do
-        resources :secrets, only: [ :index, :show ]
+      resources :secrets, only: [ :index, :show, :create, :update, :destroy ] do
+        resources :items, only: [ :create, :update, :destroy ], controller: "secrets/items"
+        resources :accesses, only: [ :index, :create, :update, :destroy ], controller: "secrets/accesses"
       end
     end
   end

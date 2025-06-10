@@ -4,7 +4,7 @@ json.data do
     json.id         @secret.id
     json.name       @secret.name
     json.dek_encrypted @user_access.dek_encrypted
-
+    # TODO - Add user permission for the secret
 
     json.items do
       json.array! @secret.items do |secret|
