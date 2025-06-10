@@ -1,4 +1,4 @@
-class SecretSetAccess < ApplicationRecord
+class SecretAccess < ApplicationRecord
   belongs_to :user
   belongs_to :secret
 

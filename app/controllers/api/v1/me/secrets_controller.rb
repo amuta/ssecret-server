@@ -12,7 +12,7 @@ module Api
             .find(params[:id])
 
           @user_access = @secret
-            .secret_set_accesses
+            .secret_accesses
             .find_by!(user_id: current_user.id)
         rescue ActiveRecord::RecordNotFound
           render json: { success: false, error: "Not found" }, status: :not_found

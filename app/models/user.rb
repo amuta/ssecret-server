@@ -12,8 +12,8 @@ class User < ApplicationRecord
            foreign_key: "created_by_user_id"
 
   # Item Sets shared with this user
-  has_many :secret_set_accesses
-  has_many :secrets, through: :secret_set_accesses
+  has_many :secret_accesses
+  has_many :secrets, through: :secret_accesses
 
   before_save :set_public_key_hash, if: :public_key_changed?
 

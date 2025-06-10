@@ -8,7 +8,7 @@ RSpec.describe 'Me::Secrets API', type: :request do
   let(:headers) { auth_headers(user) }
 
   before do
-    create(:secret_set_access, user: user, secret: secret)
+    create(:secret_access, user: user, secret: secret)
     create(:item, secret: secret, key: 'TEST_KEY', content: 'test content')
     create(:item, secret: own_secret, key: 'MY_KEY', content: 'my content')
   end

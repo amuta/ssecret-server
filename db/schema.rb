@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_10_163336) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_10_165534) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,15 +24,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_10_163336) do
     t.index ["secret_id"], name: "index_items_on_secret_id"
   end
 
-  create_table "secret_set_accesses", force: :cascade do |t|
+  create_table "secret_accesses", force: :cascade do |t|
     t.integer "user_id"
     t.integer "secret_id"
     t.text "dek_encrypted"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "permissions", default: 0
-    t.index ["secret_id"], name: "index_secret_set_accesses_on_secret_id"
-    t.index ["user_id"], name: "index_secret_set_accesses_on_user_id"
+    t.index ["secret_id"], name: "index_secret_accesses_on_secret_id"
+    t.index ["user_id"], name: "index_secret_accesses_on_user_id"
   end
 
   create_table "secrets", force: :cascade do |t|
