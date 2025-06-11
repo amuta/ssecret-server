@@ -61,9 +61,10 @@ echo ""
 echo "--> Running remote command to create user '$ADMIN_USERNAME'..."
 echo "    This will use the user:create Rake task on the server."
 
-flyctl ssh console -a "$APP_NAME" -C "bin/rails \"user:create[$ADMIN_USERNAME,'$PUB_KEY']\"" --pty
+# Print the command to the console for clarity
+set -x
+flyctl ssh console -a "$APP_NAME" -C "bin/rails \"user:create[$ADMIN_USERNAME,$PUB_KEY]\"" --pty
 
 echo ""
 echo "✅ Done. If no errors were reported by the server, your admin user should be created."
 echo "   You can now use the private key at '$PRIVATE_KEY_PATH' with the client."
-
