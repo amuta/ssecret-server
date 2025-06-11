@@ -29,13 +29,20 @@ class SignatureAuthenticator
     timestamp_age < 5.minutes.to_i
   end
 
-  def string_to_verify
-    "#{@request.method}#{@request.fullpath}#{@request.raw_post}#{@timestamp}"
-  end
-
   def find_and_verify_user
     user = User.find_by(public_key_hash: @key_hash)
-    return nil unless user && user.verify_signature(string_to_verify, @signature)
-    user
+    return nil unless user
+
+    is_valid = SignatureVerifier.call(
+      user: user,
+      string_to_verify: string_to_verify,
+      signature: @signature
+    )
+
+    is_valid ? user : nil
+  end
+
+  def string_to_verify
+    "#{@request.method}#{@request.fullpath}#{@request.raw_post}#{@timestamp}"
   end
 end
