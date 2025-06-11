@@ -14,12 +14,18 @@ module Api
       end
 
       def create
-        @secret = Secret.new(secret_params)
+        result = SecretCreator.call(
+          user: current_user,
+          name: secret_params[:name],
+          dek: secret_params[:dek_encrypted],
+          items_attributes: secret_params[:items_attributes]
+        )
 
-        if @secret.save
+        if result.success?
+          @secret = result.payload
           render status: :created
         else
-          render_unprocessable_entity @secret.errors.full_messages.to_sentence
+          render_unprocessable_entity result.errors.to_sentence
         end
       end
 
@@ -65,10 +71,7 @@ module Api
           :name,
           :dek_encrypted,
           items_attributes: [ :key, :content, :metadata ]
-        ).tap do |p|
-          p[:creator_user] = current_user
-          p[:creator_dek] = p[:dek_encrypted]
-        end.slice(:name, :creator_user, :creator_dek, :items_attributes)
+        )
       end
     end
   end

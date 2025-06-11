@@ -25,23 +25,4 @@ class Secret < ApplicationRecord
   }
 
   validates :name, presence: true
-
-  before_validation :build_admin_access, if: -> { creator_user && creator_dek }, on: :create
-
-  # Custom attributes for creating a secret
-  # These are not persisted in the database
-  # but used to set the admin access during creation
-  attr_accessor :creator_user, :creator_dek
-
-  private
-
-  def build_admin_access
-    return if secret_accesses.any? { |access| access.user_id == creator_user.id }
-
-    secret_accesses.build(
-      user: creator_user,
-      permissions:  :admin,
-      dek_encrypted: creator_dek
-    )
-  end
 end
