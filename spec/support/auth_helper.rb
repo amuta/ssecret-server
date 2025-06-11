@@ -13,10 +13,7 @@ module AuthHelper
 
     # Update user with only the public key info if not present
     unless user.public_key.present?
-      user.update!(
-        public_key: private_key.public_key.to_pem,
-        public_key_hash: Digest::SHA256.hexdigest(private_key.public_key.to_pem)
-      )
+      user.update!(raw_public_key: private_key.public_key.to_s)
     end
 
     # Create string to sign
