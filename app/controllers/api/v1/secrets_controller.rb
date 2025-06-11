@@ -67,7 +67,7 @@ module Api
           items_attributes: [ :key, :content, :metadata ]
         ).tap do |p|
           p[:creator_user] = current_user
-          p[:creator_dek] = params[:dek_encrypted]
+          p[:creator_dek] = p[:dek_encrypted]
         end.slice(:name, :creator_user, :creator_dek, :items_attributes)
       end
     end

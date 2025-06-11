@@ -115,6 +115,17 @@ RSpec.describe 'Secrets API', type: :request do
         keys = secret_data['items'].map { |i| i['key'] }
         expect(keys).to contain_exactly('FIRST_KEY', 'SECOND_KEY')
       end
+
+      it 'creates an secret_access for the user with its dek_encrypted' do
+        expect {
+          post '/api/v1/secrets', params: params_with_items, headers: headers
+        }.to change(SecretAccess, :count).by(1)
+
+        secret_access = SecretAccess.last
+        expect(secret_access.user).to eq(user)
+        expect(secret_access.permissions).to eq('admin')
+        expect(secret_access.dek_encrypted).to eq('encrypted_dak_value')
+      end
     end
   end
 
