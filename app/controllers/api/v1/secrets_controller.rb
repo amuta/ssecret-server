@@ -1,16 +1,12 @@
 module Api
   module V1
     class SecretsController < ApplicationController
-      def index
-        @secrets = Secret.accessible_by(current_user)
-      end
+      load_and_authorize_resource :secret
+
+      def index; end
 
       def show
-        load_secret
         load_user_access
-
-      rescue ActiveRecord::RecordNotFound
-        render_not_found
       end
 
       def create
@@ -30,25 +26,18 @@ module Api
       end
 
       def destroy
-        # TODO - Need permission layer for handling things like this
-        load_managed_secret
-
         if @secret.destroy
           head :no_content
         else
           render_unprocessable_entity @secret.errors.full_messages.to_sentence
         end
-
-      rescue ActiveRecord::RecordNotFound
-        render_not_found
       end
 
       private
 
-      def load_secret
-        @secret = Secret
-          .accessible_by(current_user)
-          .find(params[:id])
+      def load_and_authorize_secret
+        @secret = Secret.find(params[:id])
+        authorize @secret
       end
 
       def load_managed_secret

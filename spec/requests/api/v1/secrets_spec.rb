@@ -1,11 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe 'Secrets API', type: :request do
-  let(:user) { create(:user) }
+  let(:user) { create(:user, admin: true) }
   let(:other_user) { create(:user) }
   let(:secret) { create(:secret) }
   let(:own_secret) { create(:secret) }
   let(:headers) { auth_headers(user) }
+  let(:other_headers) { auth_headers(other_user) }
 
   before do
     create(:secret_access, user: user, secret: secret)
@@ -39,7 +40,6 @@ RSpec.describe 'Secrets API', type: :request do
 
     it 'returns 404 if the user does not have access to the secret set' do
       get "/api/v1/secrets/#{own_secret.id}", headers: headers
-
       expect(response).to have_http_status(:not_found)
       body = response.parsed_body
       expect(body['success']).to be false
@@ -149,20 +149,12 @@ RSpec.describe 'Secrets API', type: :request do
       expect(response).to have_http_status(:no_content)
     end
 
-    it 'returns not_found if the user cannot manage the secret' do
-      other_secret = create(:secret)
-      create(
-        :secret_access,
-        user: other_user,
-        secret: other_secret,
-        permissions: :admin
-      )
+    it 'returns unauthorize if the user cannot manage the secret' do
+      delete "/api/v1/secrets/#{secret.id}", headers: other_headers
 
-      delete "/api/v1/secrets/#{other_secret.id}", headers: headers
-
-      expect(response).to have_http_status(:not_found)
+      expect(response).to have_http_status(:unauthorized)
       body = response.parsed_body
-      expect(body['error']).to eq('Resource Not Found')
+      expect(body['error']).to eq('You are not authorized to perform this action.')
       expect(body['success']).to be false
     end
   end

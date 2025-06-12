@@ -1,6 +1,11 @@
 class ApplicationController < ActionController::API
   before_action :authenticate_request!
 
+  rescue_from ActiveRecord::RecordNotFound do |_exception|
+    render_not_found
+  end
+
+
   private
 
   def render_not_found(message = nil)
@@ -57,4 +62,66 @@ class ApplicationController < ActionController::API
   def current_user
     @current_user
   end
+
+  def authorize(record, query)
+    # Infers policy class from the record, e.g., Secret -> SecretPolicy
+    policy_class = "#{record.class.name}Policy".constantize
+    policy = policy_class.new(current_user, record)
+
+    return if policy.public_send(query)
+
+    render_unauthorized("You are not authorized to perform this action.")
+  end
+
+  def policy_scope(scope)
+    policy_scope_class = "#{scope.name}Policy::Scope".constantize
+    policy_scope_class.new(current_user, scope).resolve
+  end
+
+  module ClassMethods
+    def load_and_authorize_resource(resource_name, options = {})
+      parent_name = options[:parent]
+      action_map = options.fetch(:map_actions, {})
+
+      before_action do
+        parent_resource = nil
+        resource_class = resource_name.to_s.classify.constantize
+
+        # 1. Load Parent if applicable
+        if parent_name
+          parent_class = parent_name.to_s.classify.constantize
+          parent_resource = parent_class.find(params[:"#{parent_name}_id"])
+          instance_variable_set("@#{parent_name}", parent_resource)
+        end
+
+        # 2. Determine which permission to check
+        query = action_map.fetch(action_name.to_sym, :"#{action_name}?")
+
+        # 3. Load and/or Authorize based on action type
+        if params[:id]
+          # Member actions: show, update, destroy
+          scope = parent_resource ? parent_resource.send(resource_name.to_s.pluralize) : resource_class
+          resource = scope.find(params[:id])
+          authorize resource, query
+          instance_variable_set("@#{resource_name}", resource)
+        else
+          # Collection actions: index, create
+          if action_name == "index"
+            scope = parent_resource ? parent_resource.send(resource_name.to_s.pluralize) : resource_class
+            instance_variable_set("@#{resource_name.to_s.pluralize}", policy_scope(scope))
+          elsif action_name == "create"
+            # For create, we authorize against the parent if one exists,
+            # otherwise we authorize against a new instance of the resource class
+            # but modify the query to include the child resource.
+            authorizeable = parent_resource.send(resource_name.to_s.pluralize).build if parent_resource
+            authorizeable ||= resource_class.new
+            authorize authorizeable, query
+          end
+        end
+      rescue ActiveRecord::RecordNotFound => e
+        render_not_found(e.model || "Resource")
+      end
+    end
+  end
+  extend ClassMethods
 end

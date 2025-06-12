@@ -2,16 +2,9 @@ module Api
   module V1
     module Secrets
       class ItemsController < ApplicationController
-        # reading (index/show) requires any access
-        before_action :load_readable_secret, only: [ :index, :show ]
+        load_and_authorize_resource :item, parent: :secret
 
-        # mutating (create/update/destroy) requires write or admin
-        before_action :load_changeable_secret, only: [ :create, :update, :destroy ]
-        before_action :load_item,              only: [ :show, :update, :destroy ]
-
-        def index
-          @items = @secret.items
-        end
+        def index; end
 
         def show; end
 
@@ -38,24 +31,6 @@ module Api
         end
 
         private
-
-        def load_readable_secret
-          @secret = Secret.accessible_by(current_user).find(params[:secret_id])
-        rescue ActiveRecord::RecordNotFound
-          render_not_found
-        end
-
-        def load_changeable_secret
-          @secret = Secret.changeable_by(current_user).find(params[:secret_id])
-        rescue ActiveRecord::RecordNotFound
-          render_not_found
-        end
-
-        def load_item
-          @item = @secret.items.find(params[:id])
-        rescue ActiveRecord::RecordNotFound
-          render_not_found
-        end
 
         def item_params
           params.require(:item).permit(:key, :content, metadata: {})

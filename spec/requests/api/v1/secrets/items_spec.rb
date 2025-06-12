@@ -58,9 +58,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no write rights)' do
+      it 'returns unauthorize (no write rights)' do
         post "/api/v1/secrets/#{secret.id}/items", params: valid_params, headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body['success']).to be false
       end
     end
@@ -83,9 +83,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no write rights)' do
+      it 'returns unauthorized (no write rights)' do
         patch "/api/v1/secrets/#{secret.id}/items/#{item.id}", params: update_params, headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -107,9 +107,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no delete rights)' do
+      it 'returns unauthorized (no write rights)' do
         delete "/api/v1/secrets/#{secret.id}/items/#{item.id}", headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -175,9 +175,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no write rights)' do
+      it 'returns unauthorized (no write rights)' do
         post "/api/v1/secrets/#{secret.id}/items", params: valid_params, headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         expect(response.parsed_body['success']).to be false
       end
     end
@@ -200,9 +200,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no write rights)' do
+      it 'returns unauthorized (no write rights)' do
         patch "/api/v1/secrets/#{secret.id}/items/#{item.id}", params: update_params, headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -224,9 +224,9 @@ RSpec.describe 'Secret Items API', type: :request do
     end
 
     context 'with read-only permission' do
-      it 'returns not_found (no delete rights)' do
+      it 'returns unauthorized (no delete rights)' do
         delete "/api/v1/secrets/#{secret.id}/items/#{item.id}", headers: headers
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
