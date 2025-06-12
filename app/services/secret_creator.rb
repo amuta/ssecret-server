@@ -15,6 +15,8 @@ class SecretCreator < ApplicationService
     )
 
     if secret.save
+      event = Audit::SecretCreated.new(secret: secret)
+      EventPublisher.publish(event)
       success(payload: secret)
     else
       failure(errors: secret.errors.full_messages)

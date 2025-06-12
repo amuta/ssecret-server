@@ -7,9 +7,7 @@ module Api
         @secrets = @secrets.includes(:secret_accesses)
       end
 
-      def show
-        load_user_access
-      end
+      def show; end
 
       def create
         result = SecretCreator.call(
@@ -29,6 +27,8 @@ module Api
 
       def destroy
         if @secret.destroy
+          event = Audit::SecretDestroyed.new(secret: @secret)
+          EventPublisher.publish(event)
           head :no_content
         else
           render_unprocessable_entity @secret.errors.full_messages.to_sentence
@@ -36,26 +36,6 @@ module Api
       end
 
       private
-
-      def load_and_authorize_secret
-        @secret = Secret.find(params[:id])
-        authorize @secret
-      end
-
-      def load_managed_secret
-        @secret = Secret
-          .managed_by(current_user)
-          .find(params[:id])
-      end
-
-      def load_user_access
-        # TODO - We dont actually need to do this way, we can probably just
-        # use the secret_accesses association directly
-        # This is a bit of a hack to get the secret_access for the current user
-        @user_access = @secret
-          .secret_accesses
-          .find_by!(user_id: current_user.id)
-      end
 
       def secret_params
         params.require(:secret).permit(

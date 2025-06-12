@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::API
+  before_action :set_current_context
   before_action :authenticate_request!
 
   rescue_from ActiveRecord::RecordNotFound do |_exception|
@@ -28,6 +29,7 @@ class ApplicationController < ActionController::API
     result = authenticate_user
     if result.success?
       @current_user = result.user
+      Current.user = @current_user # Set the current user for the request
     else
       render json: result, status: :unauthorized
     end
@@ -63,6 +65,11 @@ class ApplicationController < ActionController::API
     @current_user
   end
 
+  def set_current_context
+    # Set a unique ID for tracing this entire request.
+    Current.correlation_id = request.request_id
+  end
+
   def authorize(record, query)
     # Infers policy class from the record, e.g., Secret -> SecretPolicy
     policy_class = "#{record.class.name}Policy".constantize
@@ -70,6 +77,8 @@ class ApplicationController < ActionController::API
 
     return if policy.public_send(query)
 
+    event = Audit::AuthorizationFailed.new(record: record, query: query, request: request)
+    EventPublisher.publish(event)
     render_unauthorized("You are not authorized to perform this action.")
   end
 

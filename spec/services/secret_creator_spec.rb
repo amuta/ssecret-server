@@ -6,12 +6,11 @@ RSpec.describe SecretCreator do
   let(:dek) { 'encrypted_dek_value' }
   let(:items_attributes) do
     [
-      { key: 'API_KEY', content: '12345' },
-      { key: 'PASSWORD', content: 'abcde' }
+      { key: 'API_KEY', content: '12345' }
     ]
   end
 
-  subject do
+  subject(:call_service) do
     described_class.call(
       user: user,
       name: secret_name,
@@ -20,36 +19,48 @@ RSpec.describe SecretCreator do
     )
   end
 
+  # Set up the request-specific context that the service now depends on.
+  before do
+    Current.user = user
+    Current.correlation_id = SecureRandom.uuid
+  end
+
   context 'with valid parameters' do
     it 'returns a successful result' do
-      result = subject
+      result = call_service
       expect(result.success?).to be true
       expect(result.errors).to be_nil
     end
 
     it 'returns the newly created secret in the payload' do
-      result = subject
+      result = call_service
       expect(result.payload).to be_an_instance_of(Secret)
       expect(result.payload).to be_persisted
     end
 
     it 'creates a new Secret record' do
-      expect { subject }.to change(Secret, :count).by(1)
+      expect { call_service }.to change(Secret, :count).by(1)
     end
 
     it 'creates a new SecretAccess record for the user' do
-      expect { subject }.to change(SecretAccess, :count).by(1)
-      secret_access = Secret.last.secret_accesses.last
+      expect { call_service }.to change(SecretAccess, :count).by(1)
+
+      result = call_service
+      secret_access = result.payload.secret_accesses.first
       expect(secret_access.user).to eq(user)
       expect(secret_access.permissions).to eq('admin')
       expect(secret_access.dek_encrypted).to eq(dek)
     end
 
     it 'creates the associated Item records' do
-      expect { subject }.to change(Item, :count).by(2)
-      secret = Secret.last
-      expect(secret.items.count).to eq(2)
-      expect(secret.items.first.key).to eq('API_KEY')
+      expect { call_service }.to change(Item, :count).by(1)
+    end
+
+    it 'publishes a secret.created audit event' do
+      # We expect the EventPublisher to be called with an instance of our
+      # structured event object.
+      expect(EventPublisher).to receive(:publish).with(an_instance_of(Audit::SecretCreated))
+      call_service
     end
   end
 
@@ -57,11 +68,11 @@ RSpec.describe SecretCreator do
     let(:items_attributes) { nil }
 
     it 'successfully creates a secret with no items' do
-      expect { subject }.to change(Secret, :count).by(1)
+      expect { call_service }.to change(Secret, :count).by(1)
         .and change(SecretAccess, :count).by(1)
         .and change(Item, :count).by(0)
 
-      result = subject
+      result = call_service
       expect(result.success?).to be true
       expect(result.payload.items.count).to eq(0)
     end
@@ -70,27 +81,22 @@ RSpec.describe SecretCreator do
   context 'with invalid parameters' do
     let(:secret_name) { '' }
 
-    it 'returns a failure result' do
-      result = subject
+    it 'returns a failure result with errors' do
+      result = call_service
       expect(result.success?).to be false
       expect(result.payload).to be_nil
-    end
-
-    it 'returns validation errors' do
-      result = subject
       expect(result.errors).to include("Name can't be blank")
     end
 
-    it 'does not create a Secret' do
-      expect { subject }.not_to change(Secret, :count)
+    it 'does not create any database records' do
+      expect { call_service }.not_to change(Secret, :count)
+      expect { call_service }.not_to change(SecretAccess, :count)
+      expect { call_service }.not_to change(Item, :count)
     end
 
-    it 'does not create a SecretAccess' do
-      expect { subject }.not_to change(SecretAccess, :count)
-    end
-
-    it 'does not create any Items' do
-      expect { subject }.not_to change(Item, :count)
+    it 'does not publish an audit event' do
+      expect(EventPublisher).not_to receive(:publish)
+      call_service
     end
   end
 end

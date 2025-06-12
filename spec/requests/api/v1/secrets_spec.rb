@@ -41,11 +41,25 @@ RSpec.describe 'Secrets API', type: :request do
       expect(body['data']['secret']['items'].first['content']).to eq('test content')
     end
 
-    it 'returns 404 if the user does not have access to the secret set' do
-      get "/api/v1/secrets/#{own_secret.id}", headers: headers
-      expect(response).to have_http_status(:not_found)
+    it 'returns unauthroized if the user does not have access to the secret set' do
+      get "/api/v1/secrets/#{secret.id}", headers: other_headers
+      expect(response).to have_http_status(:unauthorized)
       body = response.parsed_body
       expect(body['success']).to be false
+    end
+
+    it "publishes an authorization.failed audit event for the parent secret" do
+      events = capture_events do
+        get "/api/v1/secrets/#{secret.id}", headers: other_headers
+      end
+
+      expect(events.count).to eq(1)
+      event = events.first
+      expect(event.name).to eq("audit.authorization_failed.v1")
+
+      expect(event.payload.record).to eq(secret)
+      expect(event.payload.query).to eq(:show?)
+      expect(AuditLog.last.action).to eq('authorization_failed')
     end
   end
 
@@ -159,6 +173,19 @@ RSpec.describe 'Secrets API', type: :request do
       body = response.parsed_body
       expect(body['error']).to eq('You are not authorized to perform this action.')
       expect(body['success']).to be false
+    end
+
+    it 'publishes an audit event when a secret is deleted' do
+      events = capture_events do
+        delete "/api/v1/secrets/#{owned_secret.id}", headers: headers
+      end
+
+      expect(events.count).to eq(1)
+      event = events.first
+
+      expect(event.name).to eq("audit.secret_destroyed.v1")
+      expect(event.payload.secret.id).to eq(owned_secret.id)
+      expect(AuditLog.last.action).to eq('secret_destroyed')
     end
   end
 end
