@@ -4,25 +4,13 @@ class Secret < ApplicationRecord
   has_many :items, dependent: :destroy
   accepts_nested_attributes_for :items, allow_destroy: true
 
-  has_one :admin_access,
-          -> { where(permissions: :admin) },
-          class_name: "SecretAccess"
-  has_one :admin, through: :admin_access, source: :user
-
-  scope :accessible_by, ->(user) {
-    joins(:secret_accesses)
-      .where(secret_accesses: { user_id: user.id })
-  }
-
-  scope :managed_by, ->(user) {
-    joins(:secret_accesses)
-      .where(secret_accesses: { user_id: user.id, permissions: :admin })
-  }
-
-  scope :changeable_by, ->(user) {
-    joins(:secret_accesses)
-      .where(secret_accesses: { user_id: user.id, permissions: [ :write, :admin ] })
-  }
-
   validates :name, presence: true
+
+  def permissions_for(user)
+    secret_accesses.find { |access| access.user_id == user.id }&.permissions
+  end
+
+  def dek_for(user)
+    secret_accesses.find { |access| access.user_id == user.id }&.dek_encrypted
+  end
 end

@@ -3,7 +3,9 @@ module Api
     class SecretsController < ApplicationController
       load_and_authorize_resource :secret
 
-      def index; end
+      def index
+        @secrets = @secrets.includes(:secret_accesses)
+      end
 
       def show
         load_user_access

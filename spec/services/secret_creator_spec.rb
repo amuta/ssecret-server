@@ -39,7 +39,7 @@ RSpec.describe SecretCreator do
 
     it 'creates a new SecretAccess record for the user' do
       expect { subject }.to change(SecretAccess, :count).by(1)
-      secret_access = Secret.last.admin_access
+      secret_access = Secret.last.secret_accesses.last
       expect(secret_access.user).to eq(user)
       expect(secret_access.permissions).to eq('admin')
       expect(secret_access.dek_encrypted).to eq(dek)
