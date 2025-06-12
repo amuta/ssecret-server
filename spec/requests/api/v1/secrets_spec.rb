@@ -33,6 +33,9 @@ RSpec.describe 'Secrets API', type: :request do
       body = response.parsed_body
       expect(body['success']).to be true
       expect(body['data']['secret']['id']).to eq(secret.id)
+      expect(body['data']['secret']['name']).to eq(secret.name)
+      expect(body['data']['secret']['dek_encrypted']).to eq(secret.dek_for(user))
+      expect(body['data']['secret']['permission']).to eq('read')
       expect(body['data']['secret']['items'].length).to eq(1)
       expect(body['data']['secret']['items'].first['key']).to eq('TEST_KEY')
       expect(body['data']['secret']['items'].first['content']).to eq('test content')

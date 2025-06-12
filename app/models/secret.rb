@@ -7,10 +7,12 @@ class Secret < ApplicationRecord
   validates :name, presence: true
 
   def permissions_for(user)
+    return nil unless user
     secret_accesses.find { |access| access.user_id == user.id }&.permissions
   end
 
   def dek_for(user)
+    return nil unless user
     secret_accesses.find { |access| access.user_id == user.id }&.dek_encrypted
   end
 end
