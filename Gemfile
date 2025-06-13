@@ -52,8 +52,8 @@ group :development, :test do
   gem "faker", "~> 3.5"
 end
 
-gem "jwt", "~> 2.10"
-
 gem "dockerfile-rails", ">= 1.7", group: :development
+gem "ruby-lsp-rspec", require: false, group: :development
 
+gem "jwt", "~> 2.10"
 gem "net-ssh", "~> 7.3"

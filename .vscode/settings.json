@@ -1,3 +1,9 @@
 {
-    "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  // ...
+  "rubyLsp.addonSettings": {
+    "Ruby LSP RSpec": {
+      "rspecCommand": "rspec -f d"
+    }
+  }
 }
