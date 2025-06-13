@@ -1,6 +1,6 @@
 class AuditLog < ApplicationRecord
   belongs_to :user, optional: true
-  belongs_to :auditable, polymorphic: true
+  belongs_to :auditable, polymorphic: true, optional: true
 
   enum :action, {
     # Authorization Events (High-Signal: only log failures)

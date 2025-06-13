@@ -7,11 +7,19 @@ class BaseEvent
     define_attribute_accessors
   end
 
+  def audit!
+    AuditLog.create!(audit_log_attributes)
+  end
+
   def event_name
     self.class.name.underscore.tr("/", ".").concat(".v1")
   end
 
   private
+
+  def audit_log_attributes
+    raise NotImplementedError, "#{self.class.name} must implement #audit_log_attributes"
+  end
 
   def define_attribute_accessors
     @attributes.each_key do |key|
