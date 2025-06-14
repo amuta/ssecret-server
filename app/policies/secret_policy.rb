@@ -1,21 +1,22 @@
 class SecretPolicy < ApplicationPolicy
   def show?
-    admin? || user_access.present?
+    admin? || record.access_context_for(user).present?
   end
 
   def create?
-    admin?
+    true
   end
 
   def update?
-    admin? || user_access&.write? || user_access&.admin?
+    context = record.access_context_for(user)
+    admin? || %w[write admin].include?(context&.dig(:effective_role))
   end
 
   def destroy?
-    admin? || user_access&.admin?
+    context = record.access_context_for(user)
+    admin? || context&.dig(:effective_role) == "admin"
   end
 
-  # This nested class handles collection scopes.
   class Scope
     attr_reader :user, :scope
 
@@ -25,13 +26,11 @@ class SecretPolicy < ApplicationPolicy
     end
 
     def resolve
-      scope.joins(:secret_accesses).where(secret_accesses: { user_id: user.id })
+      return scope.all if user.admin?
+
+      scope.joins(:users).where(users: { id: user.id }).distinct
     end
   end
 
   private
-
-  def user_access
-    @user_access ||= record.secret_accesses.find_by(user_id: user.id)
-  end
 end

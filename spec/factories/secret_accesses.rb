@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :secret_access do
-    association :user
     association :secret
-    dek_encrypted { "encrypted_dek_#{SecureRandom.hex(16)}" }
+    association :group, factory: :group
+    encrypted_dek { "encrypted_dek_#{SecureRandom.hex(16)}" }
   end
 end

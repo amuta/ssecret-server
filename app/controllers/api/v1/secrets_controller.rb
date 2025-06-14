@@ -4,16 +4,20 @@ module Api
       load_and_authorize_resource :secret
 
       def index
-        @secrets = @secrets.includes(:secret_accesses)
+        @secrets = @secrets.includes(
+          :items,
+          secret_accesses: { group: :group_memberships }
+        )
       end
 
       def show; end
 
       def create
-        result = SecretCreator.call(
+        result = ::Secrets::CreateService.call(
           user: current_user,
+          group_id: secret_params[:group_id],
           name: secret_params[:name],
-          dek: secret_params[:dek_encrypted],
+          dek: secret_params[:encrypted_dek],
           items_attributes: secret_params[:items_attributes]
         )
 
@@ -39,8 +43,9 @@ module Api
 
       def secret_params
         params.require(:secret).permit(
+          :group_id,
           :name,
-          :dek_encrypted,
+          :encrypted_dek,
           items_attributes: [ :key, :content, :metadata ]
         )
       end

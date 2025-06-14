@@ -7,7 +7,7 @@ RSpec.describe Users::CreateService, type: :service do
     {
       username: 'testuser',
       raw_public_key: pem_public_key,
-      admin: true
+      personal_group_encrypted_key: 'encrypted_key_value'
     }
   end
   let(:params) { valid_attributes }
@@ -27,6 +27,20 @@ RSpec.describe Users::CreateService, type: :service do
         expect(result).to be_success
         expect(result.payload).to be_a(User)
         expect(result.payload.username).to eq('testuser')
+      end
+
+      it "creates a personal group and groupmembership with the groupkey" do
+        expect { subject }
+          .to change(Group, :count).by(1)
+          .and change(GroupMembership, :count).by(1)
+
+        result = subject
+        user = result.payload
+        personal_group = user.personal_group
+
+        expect(personal_group.name).to eq('testuser-personal')
+        expect(personal_group.group_memberships.first.role).to eq('admin')
+        expect(personal_group.group_memberships.first.encrypted_group_key).to eq('encrypted_key_value')
       end
     end
 

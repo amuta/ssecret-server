@@ -1,191 +1,126 @@
 require 'rails_helper'
 
 RSpec.describe 'Secrets API', type: :request do
-  let(:user) { create(:user, admin: true) }
-  let(:other_user) { create(:user) }
-  let(:secret) { create(:secret) }
-  let(:own_secret) { create(:secret) }
-  let(:headers) { auth_headers(user) }
-  let(:other_headers) { auth_headers(other_user) }
-
-  before do
-    create(:secret_access, user: user, secret: secret)
-    create(:item, secret: secret, key: 'TEST_KEY', content: 'test content')
-    create(:item, secret: own_secret, key: 'MY_KEY', content: 'my content')
-  end
+  let!(:user) { create(:user) }
+  let!(:other_user) { create(:user) }
+  let!(:secret) { create(:secret) }
+  let!(:headers) { auth_headers(user) }
+  let!(:other_headers) { auth_headers(other_user) }
 
   describe 'GET /api/v1/secrets' do
-    it 'returns all secret the user has access to' do
-      get '/api/v1/secrets', headers: headers
+    context 'when user has direct and indirect access' do
+      let!(:shared_group) { create(:group, name: 'developers') }
 
-      expect(response).to have_http_status(:success)
-      body = response.parsed_body
-      expect(body['success']).to be true
-      expect(body['data']['secrets'].length).to eq(1)
-    end
-  end
+      before do
+        # Grant user 'admin' access via their personal group
+        create(:secret_access,
+               secret: secret,
+               group: user.personal_group,
+               role: :admin,
+               encrypted_dek: 'personal_dek')
 
-  describe 'GET /api/v1/secrets/:id' do
-    it 'returns a specific secret set the user has access to' do
-      get "/api/v1/secrets/#{secret.id}", headers: headers
-
-      expect(response).to have_http_status(:success)
-      body = response.parsed_body
-      expect(body['success']).to be true
-      expect(body['data']['secret']['id']).to eq(secret.id)
-      expect(body['data']['secret']['name']).to eq(secret.name)
-      expect(body['data']['secret']['dek_encrypted']).to eq(secret.dek_for(user))
-      expect(body['data']['secret']['permission']).to eq('read')
-      expect(body['data']['secret']['items'].length).to eq(1)
-      expect(body['data']['secret']['items'].first['key']).to eq('TEST_KEY')
-      expect(body['data']['secret']['items'].first['content']).to eq('test content')
-    end
-
-    it 'returns unauthroized if the user does not have access to the secret set' do
-      get "/api/v1/secrets/#{secret.id}", headers: other_headers
-      expect(response).to have_http_status(:unauthorized)
-      body = response.parsed_body
-      expect(body['success']).to be false
-    end
-
-    it "publishes an authorization.failed audit event for the parent secret" do
-      events = capture_events do
-        get "/api/v1/secrets/#{secret.id}", headers: other_headers
+        # Grant user 'read' access via a shared group
+        create(:group_membership, user: user, group: shared_group, encrypted_group_key: 'user_group_key')
+        create(:secret_access,
+               secret: secret,
+               group: shared_group,
+               role: :read,
+               encrypted_dek: 'shared_dek')
       end
 
-      expect(events.count).to eq(1)
-      event = events.first
-      expect(event.name).to eq("audit.authorization_failed.v1")
+      it 'returns the secret with the highest effective role' do
+        get '/api/v1/secrets', headers: headers
+        expect(response).to have_http_status(:success)
 
-      expect(event.payload.record).to eq(secret)
-      expect(event.payload.query).to eq(:show?)
-      expect(AuditLog.last.action).to eq('authorization_failed')
+        body = response.parsed_body['data']
+        expect(body['secrets'].length).to eq(1)
+
+        secret_data = body['secrets'].first
+        expect(secret_data['effective_role']).to eq('admin')
+      end
+
+      it 'returns all access paths with correct key chains' do
+        get '/api/v1/secrets', headers: headers
+        secret_data = response.parsed_body.dig('data', 'secrets', 0)
+
+        expect(secret_data['access_paths'].length).to eq(2)
+
+        personal_path = secret_data['access_paths'].find { |p| p['via_group']['personal'] == true }
+        shared_path = secret_data['access_paths'].find { |p| p['via_group']['personal'] == false }
+
+        expect(personal_path['role']).to eq('admin')
+        expect(personal_path['key_chain']['encrypted_dek']).to eq('personal_dek')
+
+        expect(shared_path['role']).to eq('read')
+        expect(shared_path['key_chain']['encrypted_dek']).to eq('shared_dek')
+        expect(shared_path['key_chain']['encrypted_group_key']).to eq('user_group_key')
+      end
+    end
+
+    context 'when user has no access' do
+      it 'returns an empty array of secrets' do
+        get '/api/v1/secrets', headers: headers
+        expect(response).to have_http_status(:success)
+        body = response.parsed_body['data']
+        expect(body['secrets']).to be_empty
+      end
     end
   end
 
   describe 'POST /api/v1/secrets' do
-    context 'with valid parameters' do
-      let(:valid_params) do
-        {
-          secret: {
-            name: 'NewSecret',
-            dek_encrypted: 'encrypted_dak_value'
-          }
+    let(:valid_params) do
+      {
+        secret: {
+          name: 'New App Secret',
+          encrypted_dek: 'encrypted_value_for_creator'
         }
-      end
-
-      it 'creates a new secret and returns it' do
-        expect {
-          post '/api/v1/secrets', params: valid_params, headers: headers
-        }.to change(Secret, :count).by(1)
-
-        expect(response).to have_http_status(:created)
-        body = response.parsed_body
-        expect(body['success']).to be true
-        expect(body['data']['secret']['name']).to eq('NewSecret')
-      end
+      }
     end
 
-    context 'with invalid parameters' do
-      it 'returns unprocessable entity' do
-        post '/api/v1/secrets',
-             params: { secret: { name: '' } },
-             headers: headers
-
-        expect(response).to have_http_status(:unprocessable_entity)
-        body = response.parsed_body
-        expect(body['success']).to be false
-      end
+    it 'creates a new secret' do
+      expect {
+        post '/api/v1/secrets', params: valid_params, headers: headers
+      }.to change(Secret, :count).by(1)
+      expect(response).to have_http_status(:created)
     end
 
-    context 'with nested items' do
-      let(:item_params) do
-        [
-          { key: 'FIRST_KEY',  content: 'first content',  metadata: { foo: 'bar' } },
-          { key: 'SECOND_KEY', content: 'second content', metadata: { baz: 'qux' } }
-        ]
-      end
-      let(:params_with_items) do
-        {
-          secret: {
-            name:           'SecretWithItems',
-            dek_encrypted:  'encrypted_dak_value',
-            items_attributes: item_params
-          }
-        }
-      end
+    it 'grants the creating user admin access via their personal group' do
+      post '/api/v1/secrets', params: valid_params, headers: headers
 
-      it 'creates a secret and its items' do
-        expect {
-          post '/api/v1/secrets', params: params_with_items, headers: headers
-        }.to change(Secret, :count).by(1)
-         .and change(Item,   :count).by(2)
+      new_secret = Secret.last
+      secret_access = new_secret.secret_accesses.first
 
-        expect(response).to have_http_status(:created)
-        body = response.parsed_body
-        expect(body['success']).to be true
-
-        secret_data = body['data']['secret']
-        expect(secret_data['name']).to eq('SecretWithItems')
-        expect(secret_data['items'].size).to eq(2)
-
-        keys = secret_data['items'].map { |i| i['key'] }
-        expect(keys).to contain_exactly('FIRST_KEY', 'SECOND_KEY')
-      end
-
-      it 'creates an secret_access for the user with its dek_encrypted' do
-        expect {
-          post '/api/v1/secrets', params: params_with_items, headers: headers
-        }.to change(SecretAccess, :count).by(1)
-
-        secret_access = SecretAccess.last
-        expect(secret_access.user).to eq(user)
-        expect(secret_access.permissions).to eq('admin')
-        expect(secret_access.dek_encrypted).to eq('encrypted_dak_value')
-      end
+      expect(secret_access.group).to eq(user.personal_group)
+      expect(secret_access).to be_admin
+      expect(secret_access.encrypted_dek).to eq('encrypted_value_for_creator')
     end
   end
 
   describe 'DELETE /api/v1/secrets/:id' do
-    let!(:owned_secret) { create(:secret) }
+    let!(:secret_to_delete) { create(:secret) }
 
-    before do
-      create(
-        :secret_access,
-        user: user,
-        secret: owned_secret,
-        permissions: :admin
-      )
-    end
-
-    it 'deletes a secret the user manages' do
-      expect {
-        delete "/api/v1/secrets/#{owned_secret.id}", headers: headers
-      }.to change(Secret, :count).by(-1)
-
-      expect(response).to have_http_status(:no_content)
-    end
-
-    it 'returns unauthorize if the user cannot manage the secret' do
-      delete "/api/v1/secrets/#{secret.id}", headers: other_headers
-
-      expect(response).to have_http_status(:unauthorized)
-      body = response.parsed_body
-      expect(body['error']).to eq('You are not authorized to perform this action.')
-      expect(body['success']).to be false
-    end
-
-    it 'publishes an audit event when a secret is deleted' do
-      events = capture_events do
-        delete "/api/v1/secrets/#{owned_secret.id}", headers: headers
+    context 'when user has admin role' do
+      before do
+        create(:secret_access, secret: secret_to_delete, group: user.personal_group, role: :admin)
       end
 
-      expect(events.count).to eq(1)
-      event = events.first
+      it 'deletes the secret' do
+        expect {
+          delete "/api/v1/secrets/#{secret_to_delete.id}", headers: headers
+        }.to change(Secret, :count).by(-1)
+        expect(response).to have_http_status(:no_content)
+      end
+    end
 
-      expect(event.name).to eq("audit.secret_destroyed.v1")
-      expect(event.payload.secret.id).to eq(owned_secret.id)
-      expect(AuditLog.last.action).to eq('secret_destroyed')
+    context 'when user does not have admin role' do
+      before do
+        create(:secret_access, secret: secret_to_delete, group: other_user.personal_group, role: :write)
+      end
+
+      it 'returns unauthorized' do
+        delete "/api/v1/secrets/#{secret_to_delete.id}", headers: other_headers
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 end

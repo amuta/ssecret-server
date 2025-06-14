@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_13_153149) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_14_145043) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,6 +30,26 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_13_153149) do
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
+  create_table "group_memberships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "group_id", null: false
+    t.integer "role", default: 0, null: false
+    t.text "encrypted_group_key", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_group_memberships_on_group_id"
+    t.index ["user_id", "group_id"], name: "index_group_memberships_on_user_id_and_group_id", unique: true
+    t.index ["user_id"], name: "index_group_memberships_on_user_id"
+  end
+
+  create_table "groups", force: :cascade do |t|
+    t.string "name"
+    t.boolean "is_personal", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_groups_on_name", unique: true
+  end
+
   create_table "items", force: :cascade do |t|
     t.string "key"
     t.text "content"
@@ -43,10 +63,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_13_153149) do
   create_table "secret_accesses", force: :cascade do |t|
     t.integer "user_id"
     t.integer "secret_id"
-    t.text "dek_encrypted"
+    t.text "encrypted_dek"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "permissions", default: 0
+    t.integer "role", default: 0
+    t.bigint "group_id"
+    t.index ["group_id"], name: "index_secret_accesses_on_group_id"
     t.index ["secret_id"], name: "index_secret_accesses_on_secret_id"
     t.index ["user_id"], name: "index_secret_accesses_on_user_id"
   end
@@ -71,5 +93,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_13_153149) do
   end
 
   add_foreign_key "audit_logs", "users"
+  add_foreign_key "group_memberships", "groups"
+  add_foreign_key "group_memberships", "users"
   add_foreign_key "items", "secrets"
+  add_foreign_key "secret_accesses", "groups"
 end

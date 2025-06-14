@@ -27,6 +27,8 @@ module Authorizable
   module ClassMethods
     def load_and_authorize_resource(resource_name, options = {})
       parent_name = options[:parent]
+      user_context = options[:user_context]
+
       action_map = options.fetch(:map_actions, {})
 
       before_action do
