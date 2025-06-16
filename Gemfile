@@ -55,5 +55,5 @@ end
 gem "dockerfile-rails", ">= 1.7", group: :development
 gem "ruby-lsp-rspec", require: false, group: :development
 
-gem "jwt", "~> 2.10"
+gem "jwt", "~> 3.0"
 gem "net-ssh", "~> 7.3"
