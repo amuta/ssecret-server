@@ -6,4 +6,6 @@ class GroupMembership < ApplicationRecord
 
   validates :encrypted_group_key, presence: true
   validates :user_id, uniqueness: { scope: :group_id }
+
+  scope :admins, -> { where(role: :admin) }
 end

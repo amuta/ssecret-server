@@ -15,10 +15,9 @@ module Api
       def create
         result = ::Secrets::CreateService.call(
           user: current_user,
-          group_id: secret_params[:group_id],
           name: secret_params[:name],
-          dek: secret_params[:encrypted_dek],
-          items_attributes: secret_params[:items_attributes]
+          items_attributes: secret_params[:items_attributes],
+          access_grants: secret_params[:access_grants]
         )
 
         if result.success?
@@ -43,10 +42,9 @@ module Api
 
       def secret_params
         params.require(:secret).permit(
-          :group_id,
           :name,
-          :encrypted_dek,
-          items_attributes: [ :key, :content, :metadata ]
+          items_attributes: [ :key, :content, :metadata ],
+          access_grants: [ :group_id, :role, :encrypted_dek ]
         )
       end
     end

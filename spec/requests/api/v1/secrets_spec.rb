@@ -72,7 +72,13 @@ RSpec.describe 'Secrets API', type: :request do
       {
         secret: {
           name: 'New App Secret',
-          encrypted_dek: 'encrypted_value_for_creator'
+          access_grants: [
+            {
+              group_id: user.personal_group.id,
+              role: 'admin',
+              encrypted_dek: 'encrypted_dek_for_user_personal_group'
+            }
+          ]
         }
       }
     end
@@ -92,7 +98,76 @@ RSpec.describe 'Secrets API', type: :request do
 
       expect(secret_access.group).to eq(user.personal_group)
       expect(secret_access).to be_admin
-      expect(secret_access.encrypted_dek).to eq('encrypted_value_for_creator')
+      expect(secret_access.encrypted_dek).to eq('encrypted_dek_for_user_personal_group')
+    end
+
+    context "when granting access to multiple groups" do
+      let!(:other_group) { create(:group) }
+      let(:multi_group_params) do
+        {
+          secret: {
+            name: 'Multi-Group Secret',
+            access_grants: [
+              {
+                group_id: user.personal_group.id,
+                role: 'admin',
+                encrypted_dek: 'personal_group_dek'
+              },
+              {
+                group_id: other_group.id,
+                role: 'read',
+                encrypted_dek: 'shared_group_dek'
+              }
+            ]
+          }
+        }
+      end
+
+      before do
+        create(:group_membership, user: user, group: other_group, role: :admin, encrypted_group_key: 'other_group_key')
+      end
+
+      it 'creates a secret with access grants to multiple groups' do
+        expect {
+          post '/api/v1/secrets', params: multi_group_params, headers: headers
+        }.to change(Secret, :count).by(1)
+        expect(response).to have_http_status(:created)
+
+        new_secret = Secret.last
+        expect(new_secret.secret_accesses.count).to eq(2)
+
+        personal_access = new_secret.secret_accesses.find_by(group: user.personal_group)
+        expect(personal_access.role).to eq('admin')
+        expect(personal_access.encrypted_dek).to eq('personal_group_dek')
+
+        shared_access = new_secret.secret_accesses.find_by(group: other_group)
+        expect(shared_access.role).to eq('read')
+        expect(shared_access.encrypted_dek).to eq('shared_group_dek')
+      end
+    end
+
+    context 'when user does not have access to the group' do
+      let(:invalid_params) do
+        {
+          secret: {
+            name: 'Invalid Secret',
+            access_grants: [
+              {
+                group_id: other_user.personal_group.id,
+                role: 'admin',
+                encrypted_dek: 'encrypted_dek_for_other_user_personal_group'
+              }
+            ]
+          }
+        }
+      end
+
+      it 'returns an error' do
+        post '/api/v1/secrets', params: invalid_params, headers: headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['error']).to include('Group not found or user do not have access to it.')
+      end
     end
   end
 

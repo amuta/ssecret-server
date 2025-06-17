@@ -14,8 +14,10 @@ RSpec.describe Secrets::CreateService do
     described_class.call(
       user: user,
       name: secret_name,
-      dek: dek,
-      items_attributes: items_attributes
+      items_attributes: items_attributes,
+      access_grants: [
+        { group_id: user.personal_group.id, role: 'admin', encrypted_dek: dek }
+      ]
     )
   end
 
@@ -74,9 +76,14 @@ RSpec.describe Secrets::CreateService do
         result = described_class.call(
           user: user,
           name: secret_name,
-          dek: dek,
-          group_id: group.id,
-          items_attributes: items_attributes
+          items_attributes: items_attributes,
+          access_grants: [
+            {
+              group_id: group.id,
+              role: 'admin',
+              encrypted_dek: 'encrypted_dek_for_test_group'
+            }
+          ]
         )
 
         expect(result.success?).to be true
@@ -91,9 +98,14 @@ RSpec.describe Secrets::CreateService do
           result = described_class.call(
             user: user,
             name: secret_name,
-            dek: dek,
-            group_id: other_group.id,
-            items_attributes: items_attributes
+            items_attributes: items_attributes,
+            access_grants: [
+              {
+                group_id: other_group.id,
+                role: 'admin',
+                encrypted_dek: 'encrypted_dek_for_other_group'
+              }
+            ]
           )
 
           expect(result.success?).to be false
