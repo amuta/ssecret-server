@@ -63,7 +63,7 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: "postgres://postgres@localhost:5432/ssecret_server_test"
+          DATABASE_URL: "postgres://postgres:postgres@localhost:5432/ssecret_server_test"
           RAILS_ENV: test
         run: |
           bundle exec rails db:setup
