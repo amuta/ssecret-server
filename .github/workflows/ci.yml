@@ -65,7 +65,7 @@ jobs:
         env:
           DATABASE_URL: "postgres://postgres:postgres@localhost:5432/ssecret_server_test"
           RAILS_ENV: test
-          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY_TEST }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
           bundle exec rails db:setup db:migrate
           bundle exec rspec --format documentation --color --profile
