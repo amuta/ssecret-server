@@ -9,6 +9,10 @@ class Group < ApplicationRecord
 
   scope :personal, -> { where(is_personal: true) }
 
+  def key_for_user(user)
+    group_memberships.find_by(user: user)&.encrypted_group_key
+  end
+
   def add_member(user, role: :member, encrypted_group_key: nil)
     group_memberships.create(user: user, role: role, encrypted_group_key: encrypted_group_key)
   end

@@ -12,11 +12,18 @@ RSpec.describe 'Me API', type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.parsed_body).to include(
-          'success' => true,
-          'data' => {
-            'username' => user.username,
-            'id' => user.id
-          }
+          "success" => true,
+          "data" => {
+            "username"=> user.username,
+            "member_of"=>[
+              {
+                "encrypted_group_key"=> user.personal_group.key_for_user(user),
+                "id"=> user.personal_group.id,
+                "is_personal"=>true,
+                "name"=>user.personal_group.name
+              }
+            ]
+            }
         )
       end
     end
@@ -30,12 +37,19 @@ RSpec.describe 'Me API', type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.parsed_body).to include(
-          'success' => true,
-          'data' => {
-            'username' => user.username,
-            'id' => user.id
-          }
-        )
+                "success" => true,
+                "data" => {
+                  "username"=> user.username,
+                  "member_of"=>[
+                    {
+                      "encrypted_group_key"=> user.personal_group.key_for_user(user),
+                      "id"=> user.personal_group.id,
+                      "is_personal"=>true,
+                      "name"=>user.personal_group.name
+                    }
+                  ]
+                  }
+              )
       end
     end
 
