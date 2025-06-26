@@ -45,7 +45,7 @@ jobs:
         image: postgres:17.5
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ""
+          POSTGRES_PASSWORD: "postgres"
           POSTGRES_DB: postgres
         ports:
         - 5432:5432
@@ -63,9 +63,7 @@ jobs:
 
       - name: Run tests
         env:
-          PGHOST: postgres
-          PGUSER: postgres
-          PGPORT: ${{ job.services.postgres.ports[5432] }}
+          DATABASE_URL: "postgres://postgres:postgres@postgres/somedatabase"
           RAILS_ENV: test
         run: |
           bundle exec rails db:setup
